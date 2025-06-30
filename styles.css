@@ -1,0 +1,20 @@
+body {
+    padding: 2em 1em;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.row-details {
+    display: none;
+}
+
+/* Optional: Pointer cursor on sortable headers */
+th.sortable {
+    cursor: pointer;
+}
+
+/* Make long descriptions wrap nicely */
+td.description-cell {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
