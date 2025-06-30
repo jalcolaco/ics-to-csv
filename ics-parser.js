@@ -2,7 +2,10 @@ let parsedEvents = [];
 let filteredEvents = [];
 let calendarMeta = { name: "", timezone: "" };
 
-document.getElementById('icsFile').addEventListener('change', handleFile);
+// Keep track of current sort directions for each field
+
+let currentSortField = "";
+let currentSortDirection = "asc";
 
 function handleFile(event) {
   const file = event.target.files[0];
@@ -120,40 +123,48 @@ function renderTable() {
 
   let html = `
       <div class="table-responsive">
-      <table id="eventsTable" class="table table-striped table-hover table-bordered">
+      <table id="eventsTable" class="table table-striped table-hover table-bordered align-middle text-nowrap small">
         <thead class="table-light">
           <tr>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('uid')">UID</th>
-            <th class="sortable" style="min-width: 200px" onclick="sortBy('summary')">Summary</th>
-            <th class="sortable" style="min-width: 200px" onclick="sortBy('location')">Location</th>
-            <th class="sortable" style="min-width: 75px" onclick="sortBy('startDate.formatedDate')">Start Date</th>
-            <th class="sortable" style="min-width: 75px" onclick="sortBy('startDate.formatedTime')">Start Time</th>
-            <th class="sortable" style="min-width: 75px" onclick="sortBy('endDate.formatedDate')">End Date</th>
-            <th class="sortable" style="min-width: 75px" onclick="sortBy('endDate.formatedTime')">End Time</th>
-            <th class="sortable" style="min-width: 400px" onclick="sortBy('description')">Description</th>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('status')">Status</th>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('sequence')">Seq</th>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('transparency')">Transparency</th>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('formatedCreatedDate.date')">Created</th>
-            <th class="row-details sortable" style="min-width: 100px" onclick="sortBy('formatedModifiedDate.date')">Modified</th>
+            <th class="col-hidden sortable th-size-medium" data-field="uid" onclick="sortBy('uid')">UID<span class="sort-arrow"></th>
+            <th class="sortable th-size-medium" data-field="summary" onclick="sortBy('summary')">Summary<span class="sort-arrow"></th>
+            <th class="sortable th-size-medium" data-field="location" onclick="sortBy('location')">Location<span class="sort-arrow"></th>
+            <th class="sortable th-size-small" data-field="startDate.formatedDate" onclick="sortBy('startDate.formatedDate')">Start Date<span class="sort-arrow"></th>
+            <th class="sortable th-size-small" data-field="startDate.formatedTime" onclick="sortBy('startDate.formatedTime')">Start Time<span class="sort-arrow"></th>
+            <th class="sortable th-size-small" data-field="endDate.formatedDate" onclick="sortBy('endDate.formatedDate')">End Date<span class="sort-arrow"></th>
+            <th class="sortable th-size-small" data-field="endDate.formatedTime" onclick="sortBy('endDate.formatedTime')">End Time<span class="sort-arrow"></th>
+            <th class="sortable th-size-large" data-field="description" onclick="sortBy('description')">Description<span class="sort-arrow"></th>
+            <th class="col-hidden th-size-small sortable" data-field="status" onclick="sortBy('status')">Status<span class="sort-arrow"></th>
+            <th class="col-hidden th-size-small sortable" data-field="sequence" onclick="sortBy('sequence')">Seq<span class="sort-arrow"></th>
+            <th class="col-hidden th-size-small sortable" data-field="transparency" onclick="sortBy('transparency')">Transparency<span class="sort-arrow"></th>
+            <th class="col-hidden th-size-small sortable" data-field="formatedCreatedDate.date" onclick="sortBy('formatedCreatedDate.date')">Created<span class="sort-arrow"></th>
+            <th class="col-hidden th-size-small sortable" data-field="formatedModifiedDate.date" onclick="sortBy('formatedModifiedDate.date')">Modified<span class="sort-arrow"></th>
           </tr>
         </thead>
         <tbody>`;
 
   filteredEvents.forEach(ev => {
     html += `<tr>
-          <td class="row-details">${ev.uid}</td>
-          <td>${ev.summary}</td>
-          <td>${ev.location}</td>
-          <td>${ev.startDate.formatedDate}</td><td>${ev.startDate.formatedTime}</td>
-          <td>${ev.endDate.formatedDate}</td><td>${ev.endDate.formatedTime}</td>
-          <td>${ev.description}</td>
-          <td class="row-details">${ev.status}</td>
-          <td class="row-details">${ev.sequence}</td>
-          <td class="row-details">${ev.transparency}</td>
-          <td class="row-details">${ev.creationDate.formatedDate}</td>
-          <td class="row-details">${ev.modifyDate.formatedDate}</td>
-        </tr>`;
+        <td class="col-hidden hidden">${ev.uid}</td>
+        <td>
+       
+
+          ${buildCellDataExpandable(ev.summary)}
+        </td>
+        <td>
+          ${buildCellDataExpandable(ev.location)}
+        </td>
+        <td>${ev.startDate.formatedDate}</td><td>${ev.startDate.formatedTime}</td>
+        <td>${ev.endDate.formatedDate}</td><td>${ev.endDate.formatedTime}</td>
+        <td>
+          ${buildCellDataExpandable(ev.description)}
+        </td>
+        <td class="col-hidden hidden">${ev.status}</td>
+        <td class="col-hidden hidden">${ev.sequence}</td>
+        <td class="col-hidden hidden">${ev.transparency}</td>
+        <td class="col-hidden hidden">${ev.creationDate.formatedDate}</td>
+        <td class="col-hidden hidden">${ev.modifyDate.formatedDate}</td>
+      </tr>`;
   });
 
   html += "</tbody></table></div>";
@@ -166,11 +177,26 @@ function renderTable() {
   }
 }
 
-// Keep track of current sort directions for each field
-const sortDirections = {};
+
+function buildCellDataExpandable(cellContent) {
+  if (!cellContent || cellContent.length <= 30) {
+    return `<div style="white-space: pre-line;">${cellContent}</div>`;
+  }
+  return `
+  
+          <details>
+            <summary>${cellContent.length > 30 ? cellContent.slice(0, 30) : cellContent}</summary>
+            <div style="white-space: pre-line;">${cellContent.slice(30)}</div>
+          </details>
+          
+          
+          `;
+}
+
+const sortDirections = {}; // track sort direction per field
 
 function sortBy(field) {
-  // Toggle the sort direction: if undefined or false, set to true (asc), else toggle
+  // Toggle the sort direction for the current field
   sortDirections[field] = !sortDirections[field];
 
   const keys = field.split(".");
@@ -179,12 +205,10 @@ function sortBy(field) {
     let valA = keys.reduce((obj, key) => (obj ? obj[key] : ""), a);
     let valB = keys.reduce((obj, key) => (obj ? obj[key] : ""), b);
 
-    // Normalize null/undefined to empty string for string comparison
     valA = valA == null ? "" : valA;
     valB = valB == null ? "" : valB;
 
-    // For date strings in dd-mm-yyyy format, convert to Date objects for comparison
-    if (field.toLowerCase().includes("date")) {
+    if (field.includes("formatedDate")) {
       valA = parseDateString(valA);
       valB = parseDateString(valB);
 
@@ -193,23 +217,33 @@ function sortBy(field) {
       return 0;
     }
 
-    // For time strings (hh:mm), just compare strings (lex order)
-    if (field.toLowerCase().includes("time")) {
+    if (field.includes("formatedTime")) {
       if (valA < valB) return sortDirections[field] ? -1 : 1;
       if (valA > valB) return sortDirections[field] ? 1 : -1;
       return 0;
     }
 
-    // Default string comparison
     return sortDirections[field]
       ? valA.localeCompare(valB)
       : valB.localeCompare(valA);
   });
 
   renderTable();
+  updateSortIndicators(field);
 }
 
-// Helper to parse dd-mm-yyyy date string into Date object
+
+function updateSortIndicators(currentField) {
+  document.querySelectorAll("th.sortable").forEach(th => {
+    const field = th.dataset.field;
+    th.classList.remove("asc", "desc");
+
+    if (field === currentField) {
+      th.classList.add(sortDirections[field] ? "asc" : "desc");
+    }
+  });
+}
+
 function parseDateString(str) {
   const parts = str.split("-");
   if (parts.length !== 3) return new Date(0); // fallback to epoch date
@@ -246,14 +280,14 @@ function toggleHiddenColumns() {
 }
 
 function hideHiddenColumns() {
-  document.querySelectorAll(".row-details").forEach(el => {
-    el.style.display = "none";
+  document.querySelectorAll(".col-hidden").forEach(el => {
+    el.classList.add("hidden");
   });
 }
 
 function showHiddenColumns() {
-  document.querySelectorAll(".row-details").forEach(el => {
-    el.style.display = "";
+  document.querySelectorAll(".col-hidden").forEach(el => {
+    el.classList.remove("hidden");
   });
 }
 
@@ -304,4 +338,5 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
+document.getElementById('icsFile').addEventListener('change', handleFile);
 document.getElementById("downloadBtn").addEventListener("click", downloadCSV);

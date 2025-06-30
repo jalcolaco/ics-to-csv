@@ -1,11 +1,38 @@
 body {
-    padding: 2em 1em;
-    max-width: 1200px;
-    margin: auto;
+    font-family: system-ui, sans-serif;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    background-color: #f8f9fa;
 }
 
-.row-details {
+h1 {
+    font-size: 2.8rem;
+}
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.4rem;
+    }
+}
+
+.hidden {
     display: none;
+}
+
+@media (max-width: 768px) {
+    #output table {
+        font-size: 0.85rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+    }
 }
 
 /* Optional: Pointer cursor on sortable headers */
@@ -17,4 +44,61 @@ th.sortable {
 td.description-cell {
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+th.th-size-small {
+
+    min-width: 50px;
+    max-width: 75px;
+}
+
+th.th-size-medium {
+
+    min-width: 100px;
+    max-width: 150px;
+}
+
+th.th-size-large {
+
+    min-width: 150px;
+    max-width: 250px;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.sort-arrow::after {
+    content: '';
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.sortable.asc .sort-arrow::after {
+    content: '▲';
+}
+
+.sortable.desc .sort-arrow::after {
+    content: '▼';
+}
+
+td, th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td.wrap, th.wrap {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+#eventsTable {
+  table-layout: fixed;
+  width: 100%;
+}
+
+td[title] {
+  cursor: help;
 }
