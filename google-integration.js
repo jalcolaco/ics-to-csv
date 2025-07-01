@@ -35,9 +35,9 @@ function handleAuthClick() {
     if (!tokenClient) {
         const clientId = getClientId();
         initGoogleAuth(clientId);
+    } else {
+        enableCalendarFeatures();
     }
-
-
 }
 
 function enableCalendarFeatures() {
@@ -120,9 +120,13 @@ window.onload = () => {
     const clientId = getClientId();
 
     if (clientId) {
-        document.getElementById("authorize_button")?.classList.remove("d-none");
-        document.getElementById("authorize_button")?.addEventListener("click", handleAuthClick);
-        initGoogleAuth(clientId); // Preload auth client
+
+        if (!tokenClient) {
+            document.getElementById("authorize_button")?.classList.remove("d-none");
+            document.getElementById("authorize_button")?.addEventListener("click", handleAuthClick);
+        } else {
+            enableCalendarFeatures();
+        }
     } else {
         console.warn("Google Client ID is missing from URL or sessionStorage.");
     }
