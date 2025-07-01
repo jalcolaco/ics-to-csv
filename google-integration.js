@@ -21,7 +21,6 @@ function initGoogleAuth(clientId) {
         prompt: 'consent',
         callback: (tokenResponse) => {
             accessToken = tokenResponse.access_token;
-            listUpcomingEvents();
         },
     });
 }
@@ -35,8 +34,25 @@ function handleAuthClick() {
     if (!accessToken) {
         tokenClient?.requestAccessToken();
     } else {
-        listUpcomingEvents();
+        enableCalendarFeatures();
     }
+}
+
+function enableCalendarFeatures() {
+    if (!accessToken) {
+        console.warn("Access token is not available. Please authorize first.");
+        return;
+    }
+
+    document.getElementById("fetch_calendars")?.classList.remove("d-none");
+    document.getElementById("fetch_events")?.classList.remove("d-none");
+
+    document.getElementById("fetch_calendars")?.addEventListener("click", listCalendars);
+    document.getElementById("fetch_events")?.addEventListener("click", listUpcomingEvents);
+
+    listCalendars();
+    listUpcomingEvents();
+
 }
 
 function listUpcomingEvents() {
@@ -47,17 +63,47 @@ function listUpcomingEvents() {
     })
     .then(res => res.json())
     .then(data => {
-        if (!data?.items?.length) {
+        console.log("Raw API response:", data);
+        if (data.error) {
+            console.error("API Error:", data.error);
+            return;
+        }
+
+        if (!data.items || data.items.length === 0) {
             console.warn("No events found or missing permissions.");
             return;
         }
+
         console.log("Events:", data.items);
     })
     .catch(err => {
         console.error("Error fetching events", err);
-        accessToken = null;
     });
 }
+
+function listCalendars() {
+    fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.items) {
+            console.warn("No calendars found or missing permissions.");
+            return;
+        }
+
+        console.log("Calendars:", data.items);
+        data.items.forEach(cal => {
+            console.log(`📅 ${cal.summary} (${cal.id})`);
+        });
+    })
+    .catch(err => {
+        console.error("Error fetching calendars", err);
+    });
+}
+
 
 window.onload = () => {
     const clientId = getClientId();
