@@ -21,6 +21,12 @@ function initGoogleAuth(clientId) {
         prompt: 'consent',
         callback: (tokenResponse) => {
             accessToken = tokenResponse.access_token;
+
+            if (!accessToken) {
+                tokenClient?.requestAccessToken();
+            } else {
+                enableCalendarFeatures();
+            }
         },
     });
 }
@@ -31,11 +37,7 @@ function handleAuthClick() {
         initGoogleAuth(clientId);
     }
 
-    if (!accessToken) {
-        tokenClient?.requestAccessToken();
-    } else {
-        enableCalendarFeatures();
-    }
+
 }
 
 function enableCalendarFeatures() {
@@ -43,6 +45,8 @@ function enableCalendarFeatures() {
         console.warn("Access token is not available. Please authorize first.");
         return;
     }
+
+    document.getElementById("authorize_button")?.classList.add("d-none");
 
     document.getElementById("fetch_calendars")?.classList.remove("d-none");
     document.getElementById("fetch_events")?.classList.remove("d-none");
@@ -61,47 +65,54 @@ function listUpcomingEvents() {
             Authorization: `Bearer ${accessToken}`
         }
     })
-    .then(res => res.json())
-    .then(data => {
-        console.log("Raw API response:", data);
-        if (data.error) {
-            console.error("API Error:", data.error);
-            return;
-        }
+        .then(res => res.json())
+        .then(data => {
+            console.log("Raw API response:", data);
+            if (data.error) {
+                console.error("API Error:", data.error);
+                return;
+            }
 
-        if (!data.items || data.items.length === 0) {
-            console.warn("No events found or missing permissions.");
-            return;
-        }
+            if (!data.items || data.items.length === 0) {
+                console.warn("No events found or missing permissions.");
+                return;
+            }
 
-        console.log("Events:", data.items);
-    })
-    .catch(err => {
-        console.error("Error fetching events", err);
-    });
+            console.log("Events:", data.items);
+        })
+        .catch(err => {
+            console.error("Error fetching events", err);
+        });
 }
 
-function listCalendars() {
-    fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-        headers: {
-            Authorization: `Bearer ${accessToken}`
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.items) {
-            console.warn("No calendars found or missing permissions.");
-            return;
-        }
+function listEventsFromCalendarThisMonth(calendarId) {
+  const now = new Date();
 
-        console.log("Calendars:", data.items);
-        data.items.forEach(cal => {
-            console.log(`📅 ${cal.summary} (${cal.id})`);
-        });
-    })
-    .catch(err => {
-        console.error("Error fetching calendars", err);
-    });
+  // Start of the current month (00:00:00 on the 1st day)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Start of the next month (to use as exclusive upper bound)
+  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  // Convert to ISO string (RFC3339 format)
+  const timeMin = startOfMonth.toISOString();
+  const timeMax = startOfNextMonth.toISOString();
+
+  fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?maxResults=50&orderBy=startTime&singleEvents=true&timeMin=${timeMin}&timeMax=${timeMax}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.items) {
+      console.warn("No events found or missing permissions.");
+      return;
+    }
+
+    console.log(`Events from calendar "${calendarId}" in the current month:`, data.items);
+    // display or process events here
+  })
+  .catch(err => console.error("Error fetching events", err));
 }
 
 
