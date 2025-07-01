@@ -58,6 +58,34 @@ function enableCalendarFeatures() {
 
 }
 
+function listCalendars() {
+    fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    })
+        .then(res => res.json())
+        .then(data => {
+            console.log("Raw API response:", data);
+            if (data.error) {
+                console.error("API Error:", data.error);
+                return;
+            }
+
+            if (!data.items || data.items.length === 0) {
+                console.warn("No calendars found or missing permissions.");
+                return;
+            }
+
+            console.log("Calendars:", data.items);
+            // Optionally, display calendar names in a dropdown or list
+        }) 
+        .catch(err => {
+            console.error("Error fetching calendars", err);
+        }
+    );
+}
+
 function listUpcomingEvents() {
     fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=10&orderBy=startTime&singleEvents=true', {
         headers: {
