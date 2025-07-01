@@ -23,21 +23,20 @@ function initGoogleAuth(clientId) {
             accessToken = tokenResponse.access_token;
 
             if (!accessToken) {
-                tokenClient?.requestAccessToken();
-            } else {
-                enableCalendarFeatures();
+                console.error("Access token was not received.");
+                return;
             }
+
+            enableCalendarFeatures(); // ✅ Now runs after token is received
         },
     });
+
+    tokenClient.requestAccessToken(); // Always request, since callback handles flow
 }
 
 function handleAuthClick() {
-    if (!tokenClient) {
-        const clientId = getClientId();
-        initGoogleAuth(clientId);
-    } else {
-        enableCalendarFeatures();
-    }
+    const clientId = getClientId();
+    initGoogleAuth(clientId);
 }
 
 function enableCalendarFeatures() {
